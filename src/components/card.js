@@ -1,3 +1,5 @@
+import datos from "../data/destinos.json"
+
 class TarjetaViaje extends HTMLElement {
     constructor() {
         super();
