@@ -1,4 +1,4 @@
-import datos from "../data/destinos.json"
+import type { TypeFromRequire } from "pkg"
 
 class TarjetaViaje extends HTMLElement {
     constructor() {
@@ -11,7 +11,6 @@ class TarjetaViaje extends HTMLElement {
     }
 
     cargarDatos() {
-
         let datos = {
             destino: this.getAttribute('destino'), 
             duracion: this.getAttribute('duracion'), 
@@ -31,10 +30,16 @@ class TarjetaViaje extends HTMLElement {
     renderizar(datos) {
         let actividadesLista = datos.actividades ? datos.actividades.split(',') : []; 
         let actividadesHTML = '';
+        
+        // Corregido el bucle para generar la lista de actividades
         for (let i = 0; i < actividadesLista.length; i++) {
             actividadesHTML += '<li>' + actividadesLista[i] + '</li>'; 
-
+        }
+        
+        // Clase disponibilidad basada en el estado
+        const disponibilidadClase = datos.disponibilidad === 'Disponible' ? 'disponible' : 'no-disponible';
        
+        // HTML completo
         this.shadowRoot.innerHTML = `
             <style>
                 .tarjeta {
@@ -64,8 +69,23 @@ class TarjetaViaje extends HTMLElement {
                     color: red;
                     font-weight: bold;
                 }
-
-
+            </style>
+            
+            <div class="tarjeta">
+                <img src="${datos.imagen}" src="https://picsum.photos/seed/picsum/200/300">
+                <h2>${datos.destino}</h2>
+                <p class="${disponibilidadClase}">${datos.disponibilidad}</p>
+                <p><strong>Duración:</strong> ${datos.duracion}</p>
+                <p><strong>Costo:</strong> ${datos.costo}</p>
+                <p><strong>Descripción:</strong> ${datos.descripcion}</p>
+                <p><strong>Alojamiento:</strong> ${datos.alojamiento}</p>
+                <p><strong>Calificación:</strong> ${datos.calificacion}</p>
+                <p><strong>Guía incluido:</strong> ${datos.guia}</p>
+                <p><strong>Actividades:</strong></p>
+                <ul>
+                    ${actividadesHTML}
+                </ul>
+            </div>
         `;
     }
 }
