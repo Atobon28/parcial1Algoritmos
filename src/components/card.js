@@ -1,63 +1,69 @@
-import type { TypeFromRequire } from "pkg"
-
 class TarjetaViaje extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' }); 
+        this.datos = null;
     }
 
     connectedCallback() {
         this.cargarDatos();
     }
 
-    cargarDatos() {
-        let datos = {
-            destino: this.getAttribute('destino'), 
-            duracion: this.getAttribute('duracion'), 
-            costo: this.getAttribute('costo'),
-            descripcion: this.getAttribute('descripcion'),
-            actividades: this.getAttribute('actividades'), 
-            disponibilidad: this.getAttribute('disponible') === 'true' ? 'Disponible' : 'No disponible',
-            imagen: this.getAttribute('imagen'), 
-            calificacion: this.getAttribute('calificacion'),
-            alojamiento: this.getAttribute('alojamiento'), 
-            guia: this.getAttribute('guia') === 'true' ? 'Sí' : 'No'
-        };
-
-        this.renderizar(datos); 
+    async cargarDatos() {
+        const id = this.getAttribute('id') || '';
+        try {
+            const response = await fetch('/data/destinos.json');
+            if (!response.ok) {
+                throw new Error('error');
+            }
+            
+            const data = await response.json();
+            this.datos = data.find(item => item.id === id) || {};
+            
+            this.renderizar(this.datos);
+        } catch (error) {
+            console.error('Error al cargar los datos:', error);
+            this.shadowRoot.innerHTML = `
+                <div>
+                    <p>Error al cargar</p>
+                </div>
+            `;
+        }
     }
 
     renderizar(datos) {
         let actividadesLista = datos.actividades ? datos.actividades.split(',') : []; 
         let actividadesHTML = '';
         
-        // Corregido el bucle para generar la lista de actividades
         for (let i = 0; i < actividadesLista.length; i++) {
-            actividadesHTML += '<li>' + actividadesLista[i] + '</li>'; 
+            actividadesHTML += '<li>' + actividadesLista[i].trim() + '</li>'; 
         }
         
-        // Clase disponibilidad basada en el estado
         const disponibilidadClase = datos.disponibilidad === 'Disponible' ? 'disponible' : 'no-disponible';
        
-        // HTML completo
         this.shadowRoot.innerHTML = `
             <style>
                 .tarjeta {
-                    border: 1px solid black; /* Un borde simple */
+                    border: 1px solid black;
                     padding: 10px;
                     margin: 10px;
                     width: 300px;
                     font-family: Arial;
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                    border-radius: 8px;
                 }
                 
                 .tarjeta img {
                     width: 100%;
                     height: 150px;
+                    object-fit: cover;
+                    border-radius: 4px;
                 }
 
                 .tarjeta h2 {
                     color: blue;
                     text-align: center;
+                    margin-top: 10px;
                 }
 
                 .disponible {
@@ -69,21 +75,25 @@ class TarjetaViaje extends HTMLElement {
                     color: red;
                     font-weight: bold;
                 }
+                
+                ul {
+                    padding-left: 20px;
+                }
             </style>
             
             <div class="tarjeta">
-                <img src="${datos.imagen}" src="https://picsum.photos/seed/picsum/200/300">
-                <h2>${datos.destino}</h2>
-                <p class="${disponibilidadClase}">${datos.disponibilidad}</p>
-                <p><strong>Duración:</strong> ${datos.duracion}</p>
-                <p><strong>Costo:</strong> ${datos.costo}</p>
-                <p><strong>Descripción:</strong> ${datos.descripcion}</p>
-                <p><strong>Alojamiento:</strong> ${datos.alojamiento}</p>
-                <p><strong>Calificación:</strong> ${datos.calificacion}</p>
-                <p><strong>Guía incluido:</strong> ${datos.guia}</p>
+                <img src="${datos.imagen || 'https://picsum.photos/seed/picsum/200/300'}" alt="${datos.destino || 'Destino'}">
+                <h2>${datos.destino || 'Sin nombre'}</h2>
+                <p class="${disponibilidadClase}">${datos.disponibilidad || ''}</p>
+                <p><strong>Duración:</strong> ${datos.duracion || ''}</p>
+                <p><strong>Costo:</strong> ${datos.costo || ''}</p>
+                <p><strong>Descripción:</strong> ${datos.descripcion || 'Sin descripción'}</p>
+                <p><strong>Alojamiento:</strong> ${datos.alojamiento || ''}</p>
+                <p><strong>Calificación:</strong> ${datos.calificacion || ''}</p>
+                <p><strong>Guía incluido:</strong> ${datos.guia || ''}</p>
                 <p><strong>Actividades:</strong></p>
                 <ul>
-                    ${actividadesHTML}
+                    ${actividadesHTML || ''}
                 </ul>
             </div>
         `;
